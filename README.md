@@ -1,6 +1,6 @@
 ## Open PS2 Loader Updater
 [![License](https://img.shields.io/github/license/KcrPL/Open-PS2-Loader-Updater.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0)
-![Version Badge](https://img.shields.io/github/release/riiconnect24/Open-PS2-Loader-Updater.svg?style=flat-square)
+![Version Badge](https://img.shields.io/github/release/KcrPL/Open-PS2-Loader-Updater.svg?style=flat-square)
 ![Download Counter](https://img.shields.io/github/downloads/KcrPL/Open-PS2-Loader-Updater/total.svg?style=flat-square)
 
 Open PS2 Loader Updater is a tool that allows you to quickly update Open PS2 Loader on your PS2 to the latest available beta build. All it takes is turning on your PS2, starting the FTP Server and running this program.
