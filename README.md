@@ -1,4 +1,4 @@
-## RiiConnect24 Patcher
+## Open PS2 Loader Updater
 [![License](https://img.shields.io/github/license/KcrPL/Open-PS2-Loader-Updater.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0)
 ![Version Badge](https://img.shields.io/github/release/riiconnect24/Open-PS2-Loader-Updater.svg?style=flat-square)
 ![Download Counter](https://img.shields.io/github/downloads/KcrPL/Open-PS2-Loader-Updater/total.svg?style=flat-square)
