@@ -22,5 +22,5 @@ You will see your PS2's IP Address on top of the screen.
 
 >This program may contain bugs. If you spot any, please report them on our [Issues Page](https://github.com/KcrPL/Open-PS2-Loader-Updater/issues)
 
-![Main Menu](https://i.imgur.com/iBrX1MU.jpg)
+![Main Menu](https://i.imgur.com/NY9bcV8.png)
 
