@@ -6,15 +6,15 @@ cd /d "%~dp0"
 if exist temp.bat del /q temp.bat
 :: ===========================================================================
 :: Open PS2 Loader Updater 
-set version=1.0.0
+set version=1.0.1
 :: AUTHORS: KcrPL
 :: ***************************************************************************
-:: Copyright (c) 2022 KcrPL
+:: Copyright (c) 2022-2024 KcrPL
 :: ===========================================================================
-set last_build=2022/06/23
-set at=20:52 CET
+set last_build=2025/02/23
+set at=23:56 CET
 
-set mode=126,36
+set mode=124,36
 mode %mode%
 title Open PS2 Loader Updater v%version%  Created by @KcrPL
 
@@ -23,19 +23,46 @@ set header=Open PS2 Loader Updater - (C) KcrPL v%version% (Updated on %last_buil
 set /a update_Activate=1
 set /a offlinestorage=0
 set FilesHostedOn=https://kcrpl.github.io/Patchers_Auto_Update/Open_PS2_Loader_Updater/v1/
-set opl_latest_link=https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z
+set opl_latest_beta=https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z
+set opl_latest_stable=https://github.com/ps2homebrew/Open-PS2-Loader/releases/latest/download/OPNPS2LD.7z
+set opl_stable_api=https://api.github.com/repos/ps2homebrew/Open-PS2-Loader/releases/latest
+
 set MainFolder=%appdata%\OpenPS2LoaderUpdater
 set TempStorage=%appdata%\OpenPS2LoaderUpdater\internet\temp
-set line=-----------------------------------------------------------------------------------------------------------------------------
+set line=-----------------------------------------------------------------------------------------------------------------------
 if not exist "%MainFolder%" md "%MainFolder%"
 if not exist "%TempStorage%" md "%TempStorage%"
 
 if not exist "%MainFolder%\ps2_target_ip.txt" >"%MainFolder%\ps2_target_ip.txt" echo NUL
 if not exist "%MainFolder%\ps2_target_path.txt" >"%MainFolder%\ps2_target_path.txt" echo mc/0/OPL/
 
+:: Set release branch of OPL. 1 - Daily Builds, 2 - Stable
+if not exist "%MainFolder%\opl_update_branch.txt" >"%MainFolder%\opl_update_branch.txt" echo 1
+set /p opl_release_branch=<"%MainFolder%\opl_update_branch.txt"
 
+:: Read the last updated date
+if not exist "%MainFolder%\last_updated.txt" >"%MainFolder%\last_updated.txt" echo NUL
+set /p last_updated=<"%MainFolder%\last_updated.txt"
+if "%last_updated%"=="NUL" set last_updated=Never
 
-goto begin_main
+:: Get the current date
+for /f "tokens=1-3 delims= " %%a in ('date /t') do set current_date=%%a
+
+:: Parse the current date (assuming format DD.MM.YYYY)
+for /f "tokens=1-3 delims=." %%a in ("%current_date%") do (
+    set current_day=%%a
+    set current_month=%%b
+    set current_year=%%c
+)
+:: Parse the last updated date (assuming format DD.MM.YYYY)
+for /f "tokens=1-3 delims=." %%a in ("%last_updated%") do (
+    set last_day=%%a
+    set last_month=%%b
+    set last_year=%%c
+)
+
+set /a days_diff=( ( ( %current_year% - %last_year% ) * 365 ) + ( ( %current_month% - %last_month% ) * 30 ) + ( %current_day% - %last_day% ) )
+goto check_version_stable
 
 :begin_main
 mode %mode%
@@ -45,9 +72,33 @@ echo %header%
 echo %line%
 echo.
 echo Welcome to the Open PS2 Loader Updater.
+echo.
+if defined stable_opl_version (
+	echo :---------------------------------------------------------------:
+	echo  The latest stable OPL version: %stable_opl_version% (Released on %stable_opl_date%^)
+	echo :---------------------------------------------------------------:
+	echo.
+)
 echo What would you like to do?
 echo.
-echo 1. Run the Open PS2 Loader Updater.
+if %opl_release_branch% == 1 (
+	echo R. Switch release branch. Current: Daily Builds
+	echo.
+	echo    /!\ Daily Builds contain the latest features and fixes but may be unstable.
+	echo        If you encounter any issues, switch to the stable branch and update.
+	echo        The stable branch is updated less frequently but is more stable.
+	echo        You may lose your settings when switching branches.
+	)
+)
+if %opl_release_branch% == 2 echo R. Switch release branch. Current: Stable
+echo.
+if %days_diff% == 0 (
+	echo Last updated on: %last_updated% (Today!^)
+	) else (
+	echo Last updated on: %last_updated% (%days_diff% days ago^)
+	)
+echo.
+echo 1. Update Open PS2 Loader.
 echo 2. Settings.
 echo.
 echo 3. Help [read manual].
@@ -57,8 +108,40 @@ set /p s=Choose:
 if "%s%"=="1" goto startup_script
 if "%s%"=="2" goto reconfigure
 if "%s%"=="3" goto help
+if "%s%"=="r" goto switch_release_branch
+if "%s%"=="R" goto switch_release_branch
 if "%s%"=="4" start https://github.com/KcrPL/Open-PS2-Loader-Updater
 goto begin_main
+
+:switch_release_branch
+if %opl_release_branch%==1 (
+	>"%MainFolder%\opl_update_branch.txt" echo 2
+	set /a opl_release_branch=2
+	goto begin_main
+	)
+if %opl_release_branch%==2 (
+	>"%MainFolder%\opl_update_branch.txt" echo 1
+	set /a opl_release_branch=1
+	goto begin_main
+	)
+
+:check_version_stable
+cls
+echo %header%
+echo %line%
+echo.
+echo Please wait while we're checking the latest stable version of Open PS2 Loader...
+echo.
+
+curl -s -H "Accept: application/vnd.github+json" "%opl_stable_api%" > "%TempStorage%\stable_release.json"
+for /f "tokens=2 delims=:," %%i in ('findstr /i "tag_name" "%TempStorage%\stable_release.json"') do set stable_opl_version=%%i
+	if not defined stable_opl_version goto begin_main
+for /f "tokens=2 delims=:," %%i in ('findstr /i "published_at" "%TempStorage%\stable_release.json"') do set stable_opl_date=%%i
+
+set stable_opl_version=%stable_opl_version:~2,-1%
+set stable_opl_date=%stable_opl_date:~2,-3%
+goto begin_main
+
 
 :help
 cls
@@ -122,14 +205,16 @@ goto reconfigure
 
 :reconfigure_ps2_path
 cls
-set ps2_target_path=mc/0/OPL/
 echo %header%
 echo %line% 
 echo.
 echo Keep in mind the format that the path needs to be.
+echo.
 echo The default is: mc/0/OPL/
+echo Current path: %ps2_target_path%
 echo.
 echo Where:
+echo.
 echo mc/0 = Memory Card 0 (first slot on the left)
 echo mc/1 = Memory Card 1 (second slot)
 echo mass/0 = First USB Port
@@ -137,7 +222,7 @@ echo mass/1 = Second USB Port
 echo.
 echo Make sure to put "/" at the end of the path. Otherwise uploading will fail.
 echo.
-set /p ps2_target_path=Enter your desired Open PS2 Loader Path [Press ENTER to select the default path]: 
+set /p ps2_target_path=Enter your desired Open PS2 Loader Path [Press ENTER to keep the current path]: 
 >"%MainFolder%\ps2_target_path.txt" echo %ps2_target_path%
 goto reconfigure
 :begin_main_download_curl
@@ -248,18 +333,16 @@ echo.
 echo.
 echo.
 echo.
-echo.
-echo.
-echo.
-echo.
+
 echo %line%              
-echo    /---\   An Update is available.              
-echo   /     \  An Update for this program is available. We suggest updating the Open PS2 Loader Updater to the latest version.
+echo    /---\    Software update available.              
+echo   /     \   We suggest updating the Open PS2 Loader Updater to the latest version.
 echo  /   !   \ 
-echo  ---------  Current version: %version%
+echo  --------- 
+echo             Current version: %version%
 echo             New version: %updateversion%
 echo                       1. Update                      2. Dismiss               3. What's new in this update?
-echo %line%    
+echo %line%
 set /p s=
 if %s%==1 goto update_files
 if %s%==2 goto ftp_check_prerequisites
@@ -381,13 +464,21 @@ echo %line%
 echo.
 echo Please wait while we're updating Open PS2 Loader on your PS2.
 echo.
-if %progress_check_connection%==0 echo [ ] Checking if the connection to your PS2 is ok.
-if %progress_check_connection%==1 echo [.] Checking if the connection to your PS2 is ok.
-if %progress_check_connection%==2 echo [X] Checking if the connection to your PS2 is ok.
+if %progress_check_connection%==0 echo [ ] Connecting to your PS2...
+if %progress_check_connection%==1 echo [.] Connecting to your PS2...
+if %progress_check_connection%==2 echo [X] Connecting to your PS2... Connected!
 
-if %progress_download%==0 echo [ ] Downloading the latest OpenPS2Loader beta from GitHub.
-if %progress_download%==1 echo [.] Downloading the latest OpenPS2Loader beta from GitHub.
-if %progress_download%==2 echo [X] Downloading the latest OpenPS2Loader beta from GitHub.
+if %opl_release_branch% == 1 (
+	if %progress_download%==0 echo [ ] Downloading the latest OpenPS2Loader daily build from GitHub.
+	if %progress_download%==1 echo [.] Downloading the latest OpenPS2Loader daily build from GitHub.
+	if %progress_download%==2 echo [X] Downloading the latest OpenPS2Loader daily build from GitHub.
+	)
+
+if %opl_release_branch% == 2 (
+	if %progress_download%==0 echo [ ] Downloading the latest OpenPS2Loader stable from GitHub.
+	if %progress_download%==1 echo [.] Downloading the latest OpenPS2Loader stable from GitHub.
+	if %progress_download%==2 echo [X] Downloading the latest OpenPS2Loader stable from GitHub.
+	)
 
 if %progress_upload%==0 echo [ ] Uploading the new build of OpenPS2Loader to your PS2.
 if %progress_upload%==1 echo [.] Uploading the new build of OpenPS2Loader to your PS2.
@@ -419,12 +510,15 @@ set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Downloading 7z.exe failed.
 		if not %temperrorlev%==0 goto error_patching
 echo.
-curl -L "%opl_latest_link%" --output "OPNPS2LD.7z"
+
+if %opl_release_branch% == 1 curl -L "%opl_latest_beta%" --output "OPNPS2LD.7z"
+if %opl_release_branch% == 2 curl -L "%opl_latest_stable%" --output "OPNPS2LD.7z"
+
 set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Downloading the latest OPL build failed
 		if not %temperrorlev%==0 goto error_patching
 7z x OPNPS2LD.7z -y>NUL
-ren OPNPS2LD\*.ELF OPNPS2LD.ELF
+ren "OPNPS2LD\*.ELF" "OPNPS2LD.ELF"
 set /a progress_download=2
 set /a progress_upload=1
 
@@ -441,6 +535,7 @@ set /a progress=4
 goto ftp_patch_main
 
 :ftp_patch_finish
+>"%MainFolder%\last_updated.txt" echo %date%
 cls
 if exist OPNPS2LD rmdir /s /q OPNPS2LD
 if exist OPNPS2LD.7z del OPNPS2LD.7z
@@ -450,16 +545,18 @@ echo %line%
 echo.
 echo We are done!
 echo.
-echo [X] Checking if the connection to your PS2 is ok.
-echo [X] Downloading the latest OpenPS2Loader beta from GitHub.
+echo [X] Connecting to your PS2... Connected!
+if %opl_release_branch% == 1 echo [X] Downloading the latest OpenPS2Loader daily build from GitHub.
+if %opl_release_branch% == 2 echo [X] Downloading the latest OpenPS2Loader stable build from GitHub.
 echo [X] Uploading the new build of OpenPS2Loader to your PS2.
 echo.
-echo OpenPS2Loader has been uploaded to your PS2's Memory Card. 
+echo The latest version of the Open PS2 Loader has been uploaded to your PS2. 
 echo If you're using a shortcut to OPL from the PS2 Main Menu, configure it in settings to run from:
 echo.
-echo (OPL PS2 PATH): %ps2_target_path%
+echo (OPL PS2 PATH): %ps2_target_path%OPNPS2LD.ELF
 echo.
-echo My work is done. Come back soon! There's a new build of OPL everyday.
+if %opl_release_branch% == 1 echo My work here is done! Come back soon! There's a new build of OPL everyday :^)
+if %opl_release_branch% == 2 echo My work here is done! Come back soon and consider checking out the latest features and fixes in the daily builds :^)
 echo.
 echo Press any key to exit.
 pause>NUL 

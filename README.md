@@ -3,13 +3,13 @@
 ![Version Badge](https://img.shields.io/github/release/KcrPL/Open-PS2-Loader-Updater.svg?style=flat-square)
 ![Download Counter](https://img.shields.io/github/downloads/KcrPL/Open-PS2-Loader-Updater/total.svg?style=flat-square)
 
-Open PS2 Loader Updater is a tool that allows you to quickly update Open PS2 Loader on your PS2 to the latest available beta build. All it takes is turning on your PS2, starting the FTP Server and running this program.
+Open PS2 Loader Updater is a tool that allows you to quickly update Open PS2 Loader on your PS2 to the latest available stable or daily build. All it takes is turning on your PS2, starting the FTP Server and running this program.
 
 No need to use any USB devices to transfer the program.
 
 ### Manual
 The point of this app is to quickly update OPL on your PS2.
-Open PS2 Loader's latest version is always available here: https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z
+Open PS2 Loader's latest daily build is always available here: https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z
 
 Your computer and PS2 needs to be on the same network so they can communicate with each other.
 Ideally your PS2 is connected to your router and you're connected to your router using WiFi or Ethernet.
@@ -22,5 +22,6 @@ You will see your PS2's IP Address on top of the screen.
 
 >This program may contain bugs. If you spot any, please report them on our [Issues Page](https://github.com/KcrPL/Open-PS2-Loader-Updater/issues)
 
-![Main Menu](https://i.imgur.com/NY9bcV8.png)
+![Main Menu](https://i.imgur.com/KiGKphO.png)
+![Finished](https://i.imgur.com/kWEHLZo.png)
 
