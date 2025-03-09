@@ -89,13 +89,14 @@ if %opl_release_branch% == 1 (
 	echo        The stable branch is updated less frequently but is more stable.
 	echo        You may lose your settings when switching branches.
 	)
-)
 if %opl_release_branch% == 2 echo R. Switch release branch. Current: Stable
 echo.
-if %days_diff% == 0 (
-	echo Last updated on: %last_updated% (Today!^)
+
+if "%days_diff%" == "0" (
+	echo Last updated on: %last_updated% [Today!]
 	) else (
-	echo Last updated on: %last_updated% (%days_diff% days ago^)
+	::echo Last updated on: %last_updated% ^[%days_diff% days ago]
+	echo Last updated on: %last_updated%
 	)
 echo.
 echo 1. Update Open PS2 Loader.
