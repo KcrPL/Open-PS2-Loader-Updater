@@ -518,7 +518,7 @@ if %opl_release_branch% == 2 curl -L "%opl_latest_stable%" --output "OPNPS2LD.7z
 set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Downloading the latest OPL build failed
 		if not %temperrorlev%==0 goto error_patching
-7z x OPNPS2LD.7z -y>NUL
+7z x OPNPS2LD.7z -y -bso0 -bse0 -bsp0
 ren "OPNPS2LD\*.ELF" "OPNPS2LD.ELF"
 set /a progress_download=2
 set /a progress_upload=1
