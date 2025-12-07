@@ -6,13 +6,13 @@ cd /d "%~dp0"
 if exist temp.bat del /q temp.bat
 :: ===========================================================================
 :: Open PS2 Loader Updater 
-set version=1.0.1
+set version=1.0.2
 :: AUTHORS: KcrPL
 :: ***************************************************************************
-:: Copyright (c) 2022-2024 KcrPL
+:: Copyright (c) 2022-2025 KcrPL
 :: ===========================================================================
-set last_build=2025/02/23
-set at=23:56 CET
+set last_build=2025/12/06
+set at=17:55 CET
 
 set mode=124,36
 mode %mode%
@@ -22,8 +22,8 @@ set header=Open PS2 Loader Updater - (C) KcrPL v%version% (Updated on %last_buil
 
 set /a update_Activate=1
 set /a offlinestorage=0
-set FilesHostedOn=https://kcrpl.github.io/Patchers_Auto_Update/Open_PS2_Loader_Updater/v1/
-set opl_latest_beta=https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.7z
+set FilesHostedOn=https://kcrpl-update.app/update/Open_PS2_Loader_Updater/v1/
+set opl_latest_beta=https://github.com/ps2homebrew/Open-PS2-Loader/releases/download/latest/OPNPS2LD.ELF
 set opl_latest_stable=https://github.com/ps2homebrew/Open-PS2-Loader/releases/latest/download/OPNPS2LD.7z
 set opl_stable_api=https://api.github.com/repos/ps2homebrew/Open-PS2-Loader/releases/latest
 
@@ -45,23 +45,6 @@ if not exist "%MainFolder%\last_updated.txt" >"%MainFolder%\last_updated.txt" ec
 set /p last_updated=<"%MainFolder%\last_updated.txt"
 if "%last_updated%"=="NUL" set last_updated=Never
 
-:: Get the current date
-for /f "tokens=1-3 delims= " %%a in ('date /t') do set current_date=%%a
-
-:: Parse the current date (assuming format DD.MM.YYYY)
-for /f "tokens=1-3 delims=." %%a in ("%current_date%") do (
-    set current_day=%%a
-    set current_month=%%b
-    set current_year=%%c
-)
-:: Parse the last updated date (assuming format DD.MM.YYYY)
-for /f "tokens=1-3 delims=." %%a in ("%last_updated%") do (
-    set last_day=%%a
-    set last_month=%%b
-    set last_year=%%c
-)
-
-set /a days_diff=( ( ( %current_year% - %last_year% ) * 365 ) + ( ( %current_month% - %last_month% ) * 30 ) + ( %current_day% - %last_day% ) )
 goto check_version_stable
 
 :begin_main
@@ -91,13 +74,7 @@ if %opl_release_branch% == 1 (
 	)
 if %opl_release_branch% == 2 echo R. Switch release branch. Current: Stable
 echo.
-
-if "%days_diff%" == "0" (
-	echo Last updated on: %last_updated% [Today!]
-	) else (
-	::echo Last updated on: %last_updated% ^[%days_diff% days ago]
 	echo Last updated on: %last_updated%
-	)
 echo.
 echo 1. Update Open PS2 Loader.
 echo 2. Settings.
@@ -375,7 +352,7 @@ echo.
 echo %line%    
 
 :: Deleting the temp files if they exist.
-curl -f -L -s -S --insecure "https://kcrpl.github.io/Patchers_Auto_Update/Open_PS2_Loader_Updater/v1/UPDATE/update_assistant.bat" --output "update_assistant.bat"
+curl -f -L -s -S --insecure "https://kcrpl-update.app/update/Open_PS2_Loader_Updater/v1/UPDATE/update_assistant.bat" --output "update_assistant.bat"
 	set temperrorlev=%errorlevel%
 	if not %temperrorlev%==0 goto error_updating
 	start update_assistant.bat -OpenPS2LoaderUpdater
@@ -486,7 +463,8 @@ if %progress_upload%==1 echo [.] Uploading the new build of OpenPS2Loader to you
 if %progress_upload%==2 echo [X] Uploading the new build of OpenPS2Loader to your PS2.
 
 if %progress%==1 goto ftp_patch_check_conn
-if %progress%==2 goto ftp_patch_download_beta
+if %progress%==2 if %opl_release_branch%==2 goto ftp_patch_download_stable
+if %progress%==2 if %opl_release_branch%==1 goto ftp_patch_download_daily
 if %progress%==3 goto ftp_patch_upload_new_build
 
 if %progress%==4 goto ftp_patch_finish
@@ -503,17 +481,16 @@ set /a progress=2
 
 goto ftp_patch_main
 
-:ftp_patch_download_beta
+:ftp_patch_download_stable
 echo.
 
-if not exist "7z.exe" curl "https://kcrpl.github.io/Patchers_Auto_Update/Open_PS2_Loader_Updater/v1/7z.exe" --output "7z.exe"
+if not exist "7z.exe" curl "https://kcrpl-update.app/update/Open_PS2_Loader_Updater/v1/7z.exe" --output "7z.exe"
 set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Downloading 7z.exe failed.
 		if not %temperrorlev%==0 goto error_patching
 echo.
 
-if %opl_release_branch% == 1 curl -L "%opl_latest_beta%" --output "OPNPS2LD.7z"
-if %opl_release_branch% == 2 curl -L "%opl_latest_stable%" --output "OPNPS2LD.7z"
+curl -L "%opl_latest_stable%" --output "OPNPS2LD.7z"
 
 set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Downloading the latest OPL build failed
@@ -527,7 +504,8 @@ set /a progress=3
 goto ftp_patch_main
 :ftp_patch_upload_new_build
 echo.
-curl --ftp-port - --disable-eprt --insecure "ftp:/%ps2_target_ip%/%ps2_target_path%" -T "OPNPS2LD\OPNPS2LD.ELF" --ftp-create-dirs
+if exist "OPNPS2LD\OPNPS2LD.ELF" curl --ftp-port - --disable-eprt --insecure "ftp:/%ps2_target_ip%/%ps2_target_path%" -T "OPNPS2LD\OPNPS2LD.ELF" --ftp-create-dirs
+if exist "OPNPS2LD.ELF" curl --ftp-port - --disable-eprt --insecure "ftp:/%ps2_target_ip%/%ps2_target_path%" -T "OPNPS2LD.ELF" --ftp-create-dirs
 set /a temperrorlev=%errorlevel%
 		if not %temperrorlev%==0 set module=Uploading to PS2 failed.
 		if not %temperrorlev%==0 goto error_patching
@@ -535,11 +513,26 @@ set /a progress_upload=2
 set /a progress=4
 goto ftp_patch_main
 
+:ftp_patch_download_daily
+echo.
+
+curl -L "%opl_latest_beta%" --output "OPNPS2LD.ELF"
+
+set /a temperrorlev=%errorlevel%
+		if not %temperrorlev%==0 set module=Downloading the latest OPL build failed
+		if not %temperrorlev%==0 goto error_patching
+set /a progress_download=2
+set /a progress_upload=1
+set /a progress=3
+goto ftp_patch_main
+
+
 :ftp_patch_finish
 >"%MainFolder%\last_updated.txt" echo %date%
 cls
 if exist OPNPS2LD rmdir /s /q OPNPS2LD
 if exist OPNPS2LD.7z del OPNPS2LD.7z
+if exist OPNPS2LD.ELF del OPNPS2LD.ELF
 if exist 7z.exe del 7z.exe
 echo %header%
 echo %line% 
